@@ -23,17 +23,18 @@ def getTimesElapsedWithNavigation(pathToTextFile):
     assert(os.path.exists(pathToTextFile), f"Text file at{pathToTextFile} does not exist!")
 
     with open(pathToTextFile) as f:
-        subjectName = None
-        output = []
         lines = f.readlines()
         start = lines[1] # In all positions, second line is always a valid numerical entry
         end = None
+
+        # Get the last line that is a numerical entry
         for line in lines:
             if(checkIfFirstCharIsDigit(line)):
                 end = line
 
-        start = start.split()
-        end = end.split()
+        # Prepare the output and return it
+        start = start.split()[0]
+        end = end.split()[0]
         return (start, end)
     
 
