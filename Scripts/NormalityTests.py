@@ -67,8 +67,8 @@ def main():
 
 
 def plotTimes(withAR, withoutAR):
-    plotData(withAR, "With AR")    
-    plotData(withoutAR, "Without AR")    
+    plotData(withAR, "Test Completion Times With AR Navigation")    
+    plotData(withoutAR, "Test Completion Times Without AR Navigation")    
 
 
 def testDataKS(withAR, withoutAR):
@@ -97,10 +97,27 @@ def plotData(resultArray, title):
     times, bins = convertDataIntoBins(resultArray, 1)
     
     # Plot the histogram and add labels
-    plt.hist(times, bins=bins, alpha=0.6, color='g')
-    plt.xlabel(f"Time bands ( sec)")
-    plt.ylabel("Number of test subjects")
-    plt.title(title)
+    fig,ax = plt.subplots(1, 1)
+    ax.hist(times, bins=bins, density=False, edgecolor = "black", color = 'green')
+    ax.set_yticks([0, 1, 2])
+    ax.set_xlabel(f"Time(s)")
+    ax.set_ylabel("Number of test subjects")
+        
+    # Annotate with precise X axis data
+    for i, rect in enumerate(ax.patches):
+        height = rect.get_height()
+        addToLabelHeight = 0.1
+        if height == 0:
+            continue
+        
+        if(i % 2):
+            addToLabelHeight += 0.03
+        else:
+            addToLabelHeight -= 0.05
+        ax.annotate(f'{int(rect.get_x())}', xy=(rect.get_x()+rect.get_width()/2, height + addToLabelHeight), 
+                    xytext=(0, 5), textcoords='offset points', ha='center', va='bottom')
+
+    fig.savefig(f"{os.path.join(FOLDER_GRAPHS_POSITIONS, title)}.png")
     plt.show()
 
 

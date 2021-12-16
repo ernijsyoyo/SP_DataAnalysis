@@ -10,3 +10,4 @@ def getAbsPath(relativePath):
 
 FOLDER_DATA_POSITIONS = getAbsPath("../Data/Positions")
 FOLDER_DATA_QUESTIONNAIRE = getAbsPath("../Data/Questionnaire")
+FOLDER_GRAPHS_POSITIONS = getAbsPath("../Graphs/Positions")
