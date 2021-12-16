@@ -1,3 +1,4 @@
+from math import sqrt
 from scipy.stats.stats import kurtosis
 from Constants import *
 from Utilities import *
@@ -7,6 +8,7 @@ import scipy.stats
 from scipy.stats import anderson
 from scipy.stats import shapiro
 from scipy.stats import normaltest
+from scipy.stats import ksone
 import matplotlib.pyplot as plt
 import numpy as np
 from numpy.random import poisson
@@ -15,34 +17,71 @@ from numpy.random import poisson
 timesElapsedWithAR = []
 timesElapsedWithoutAR = []
 
+hurriedWith = []
+hurriedWithout = []
+hardworkWith = []
+hardworkWithout = []
+insecureWith = []
+insecureWithout = []
+mentaldemandWith = []
+mentaldemandWithout = []
+physicaldemandWith = []
+physicaldemandWithout = []
+successWith = []
+successWithout = []
+
 def main():
     fillDataVariables()
     print("")
-    testDataAgostino()
-    testDataAD()
-    testDataSW()
-    testDataKS()
-    plotTimes()
 
-def plotTimes():
-    plotData(timesElapsedWithAR, "With AR")    
-    plotData(timesElapsedWithoutAR, "Without AR")    
+    dataWithAR = [x[1] for x in timesElapsedWithAR if x[0] != 'P1']
+    dataWithoutAR = [x[1] for x in timesElapsedWithoutAR]
 
-def testDataAgostino():
-    testPerformDAgostino(timesElapsedWithAR, "With AR")
-    testPerformDAgostino(timesElapsedWithoutAR, "Without AR")
+    tmp1 : np.ndarray=np.array(dataWithAR)
+    tmp2 : np.ndarray=np.array(dataWithoutAR)
 
-def testDataKS():
-    testPerformKS(timesElapsedWithAR, "With AR")
-    testPerformKS(timesElapsedWithoutAR, "Without AR")
+    print(tmp1.mean())
+    print(tmp1.std())
+    print(tmp2.mean())
+    print(tmp2.std())
+    
 
-def testDataAD():
-    testPerformAD(timesElapsedWithAR, "With AR")
-    testPerformAD(timesElapsedWithoutAR, "Without AR")
+    # testPerformSW(hurriedWith[0][1], "hurriedWith")
+    # testPerformSW(hurriedWithout[0][1], "hurriedWithout")
+    # testPerformSW(hardworkWith[0][1], "hardworkWith")
+    # testPerformSW(hardworkWithout[0][1], "hardworkWithout")
+    # testPerformSW(insecureWith[0][1], "insecureWith")
+    # testPerformSW(insecureWithout[0][1], "insecureWithout")
+    # testPerformSW(mentaldemandWith[0][1], "mentaldemandWith")
+    # testPerformSW(mentaldemandWithout[0][1], "mentaldemandWithout")
+    # testPerformSW(physicaldemandWith[0][1], "physicaldemandWith")
+    # testPerformSW(physicaldemandWithout[0][1], "physicaldemandWithout")
+    # testPerformSW(successWith[0][1], "successWith")
+    # testPerformSW(successWithout[0][1], "successWithout")
 
-def testDataSW():
-    testPerformSW(timesElapsedWithAR, "With AR")
-    testPerformSW(timesElapsedWithoutAR, "Without AR")
+    plotTimes(dataWithAR, dataWithoutAR)
+    testDataKS(dataWithAR, dataWithoutAR)
+    testDataAD(dataWithAR, dataWithoutAR)
+    testDataSW(dataWithAR, dataWithoutAR)
+    
+
+
+def plotTimes(withAR, withoutAR):
+    plotData(withAR, "With AR")    
+    plotData(withoutAR, "Without AR")    
+
+
+def testDataKS(withAR, withoutAR):
+    testPerformKS(withAR, "With AR")
+    testPerformKS(withoutAR, "Without AR")
+
+def testDataAD(withAR, withoutAR):
+    testPerformAD(withAR, "With AR")
+    testPerformAD(withoutAR, "Without AR")
+
+def testDataSW(withAR, withoutAR):
+    testPerformSW(withAR, "With AR")
+    testPerformSW(withoutAR, "Without AR")
 
 
 #######################################################################################
@@ -55,8 +94,7 @@ def plotData(resultArray, title):
         title ([type]): title of the plot
     """
     # Extract the
-    times = [x[1] for x in resultArray]
-    times, bins = convertDataIntoBins(times, 5)
+    times, bins = convertDataIntoBins(resultArray, 1)
     
     # Plot the histogram and add labels
     plt.hist(times, bins=bins, alpha=0.6, color='g')
@@ -71,33 +109,15 @@ def testPerformSW(input, description):
     print(f"Performing Shapiro-Wilk Test with {description}")
 
     # normality test
-    data = [x[1] for x in input]
-    stat, p = shapiro(data)
+    stat, p = shapiro(input)
     print('Statistics=%.3f, p=%.3f' % (stat, p))
 
     # interpret
     alpha = 0.05
     if p > alpha:
-        print('Sample looks Gaussian (fail to reject H0)')
+        print('Data looks normal (accept H0)\n')
     else:
-        print('Sample does not look Gaussian (reject H0)')
-
-
-def testPerformDAgostino(input, description):
-    """ Performs DAgostino test on the input data """
-    print(f"Performing DAgostino Test with {description}")
-    
-    # normality test
-    data = [x[1] for x in input]
-    stat, p = normaltest(data)
-    print('Statistics=%.3f, p=%.3f' % (stat, p))
-
-    # interpret
-    alpha = 0.05
-    if p > alpha:
-        print('Sample looks Gaussian (fail to reject H0)')
-    else:
-        print('Sample does not look Gaussian (reject H0)')
+        print('Data does not look normal (reject H0) \n')
 
 
 def testPerformAD(input, description):
@@ -105,27 +125,34 @@ def testPerformAD(input, description):
     print(f"Performing Anderson-Darling Test with {description}")
 
     # normality test
-    data = [x[1] for x in input]
-    result = anderson(data)
+    result = anderson(input)
     print('Statistic: %.3f' % result.statistic)
-    p = 0
+    sl, cv = result.significance_level[2], result.critical_values[2] # 5% confidence
+    statistic = result.statistic
+    
+    # Evaluate
+    if statistic < cv:
+        print('%.3f: %.3f, Data looks normal (accept H0)\n' % (sl, cv))
+    else:
+        print('%.3f: %.3f, Data does not look normal (reject H0)\n' % (sl, cv))
 
-    for i in range(len(result.critical_values)):
-        sl, cv = result.significance_level[i], result.critical_values[i]
-        if result.statistic < result.critical_values[i]:
-            print('%.3f: %.3f, data looks normal (fail to reject H0)' % (sl, cv))
-        else:
-            print('%.3f: %.3f, data does not look normal (reject H0)' % (sl, cv))
 
-
-def testPerformKS(withNavigation, description):
+def testPerformKS(input, description):
     """ Performs the Kolmogorov-Smirnov Test on data with and without navigation """
-    # Extract the times in seconds
     print(f"Plotting {description}")
-    withNav = [x[1] for x in withNavigation]
+     
+    # Prepare the data
+    sorted = np.sort(input, axis=0)
+    # Calculate the zScore and obtain the critical value
+    zScores = (sorted - sorted.mean()) / (sorted.std())
+    criticalValue = ksone.ppf(1 - 0.05 / 2, len(input))
 
-    output = scipy.stats.kstest(withNav, 'norm')
-    print(output)
+    # Run the test and evaluate
+    output = scipy.stats.kstest(zScores, 'norm')
+    if(output.pvalue > criticalValue):
+        print(f"p0: {output.pvalue}; Critical value: {criticalValue}. Data looks normal (accept H0)")
+    else:
+        print(f"p0: {output.pvalue}; Critical value: {criticalValue}. Data does not look normal (reject H0)")
     
 
 def fillDataVariables():
@@ -172,6 +199,47 @@ def fillDataVariables():
 
         # Append delta time with test subject ID
         timesElapsedWithoutAR.append((subjectID, deltaTime.seconds))
+
+    # Questionnaire
+    files = listdir(FOLDER_DATA_QUESTIONNAIRE)
+    questionnarePaths = [os.path.join(FOLDER_DATA_QUESTIONNAIRE, x) for x in files]
+    for fullFilePath in questionnarePaths:
+        if "HardWorkWith" == os.path.basename(fullFilePath):
+            hardworkWith.append(getLinesFromTextFile(fullFilePath))
+            
+        elif "HardWorkWithout" == os.path.basename(fullFilePath):
+            hardworkWithout.append(getLinesFromTextFile(fullFilePath))
+            
+        elif "HurriedWith" == os.path.basename(fullFilePath):
+            hurriedWith.append(getLinesFromTextFile(fullFilePath))
+            
+        elif "HurriedWithout" == os.path.basename(fullFilePath):
+            hurriedWithout.append(getLinesFromTextFile(fullFilePath))
+            
+        elif "InsecureWith" == os.path.basename(fullFilePath):
+            insecureWith.append(getLinesFromTextFile(fullFilePath))
+
+        elif "InsecureWithout" == os.path.basename(fullFilePath):
+            insecureWithout.append(getLinesFromTextFile(fullFilePath))
+
+        elif "MentalDemandWith" == os.path.basename(fullFilePath):
+            mentaldemandWith.append(getLinesFromTextFile(fullFilePath))
+
+        elif "MentalDemandWithout" == os.path.basename(fullFilePath):
+            mentaldemandWithout.append(getLinesFromTextFile(fullFilePath))
+
+        elif "PhysicalDemandWith" == os.path.basename(fullFilePath):
+            physicaldemandWith.append(getLinesFromTextFile(fullFilePath))
+
+        elif "PhysicalDemandWithout" == os.path.basename(fullFilePath):
+            physicaldemandWithout.append(getLinesFromTextFile(fullFilePath))
+
+        elif "SuccessWith" == os.path.basename(fullFilePath):
+            successWith.append(getLinesFromTextFile(fullFilePath))
+
+        elif "SuccessWithout" == os.path.basename(fullFilePath):
+            successWithout.append(getLinesFromTextFile(fullFilePath))
+
 
 
 if __name__ == '__main__':

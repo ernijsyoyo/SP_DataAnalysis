@@ -35,7 +35,9 @@ def getLinesFromTextFile(pathToTextFile):
             elif not line[0].isdigit():
                 subjectName = line
             else:
-                output.append(line)
+                tmp = line.strip("\n")
+                tmp = int(tmp)
+                output.append(tmp)
         
         return subjectName, output
 
@@ -56,6 +58,7 @@ def getTimesElapsedWithNavigation(pathToTextFile):
         start = start.split()[0]
         end = end.split()[0]
         return (start, end)
+
     
 
 
