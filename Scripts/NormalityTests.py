@@ -4,8 +4,12 @@ from Utilities import *
 from os import listdir
 import datetime
 import scipy.stats
+from scipy.stats import anderson
+from scipy.stats import shapiro
+from scipy.stats import normaltest
 import matplotlib.pyplot as plt
 import numpy as np
+from numpy.random import poisson
 
 """ Test the data for Gaussian distribution """
 timesElapsedWithAR = []
@@ -13,20 +17,35 @@ timesElapsedWithoutAR = []
 
 def main():
     fillDataVariables()
+    print("")
+    testDataAgostino()
+    testDataAD()
+    testDataSW()
+    testDataKS()
     plotTimes()
-    #testDataKS()
-
-def splitDataIntoBins(array):
-    
-    pass
 
 def plotTimes():
-    plotData(timesElapsedWithAR, "With AR Navigation")    
-    plotData(timesElapsedWithoutAR, "Without AR Navigation")    
+    plotData(timesElapsedWithAR, "With AR")    
+    plotData(timesElapsedWithoutAR, "Without AR")    
+
+def testDataAgostino():
+    testPerformDAgostino(timesElapsedWithAR, "With AR")
+    testPerformDAgostino(timesElapsedWithoutAR, "Without AR")
 
 def testDataKS():
     testPerformKS(timesElapsedWithAR, "With AR")
     testPerformKS(timesElapsedWithoutAR, "Without AR")
+
+def testDataAD():
+    testPerformAD(timesElapsedWithAR, "With AR")
+    testPerformAD(timesElapsedWithoutAR, "Without AR")
+
+def testDataSW():
+    testPerformSW(timesElapsedWithAR, "With AR")
+    testPerformSW(timesElapsedWithoutAR, "Without AR")
+
+
+#######################################################################################
 
 def plotData(resultArray, title):
     """ Plots the data as a histogram for qualitative analysis for data distribution
@@ -35,32 +54,79 @@ def plotData(resultArray, title):
         resultArray ([type]): dataset
         title ([type]): title of the plot
     """
-    print(f"Plotting {title}")
-    # Fit a normal distribution to the data:
-    times = [x[1] for x in resultArray if x[0] != 'P1']
-    mu, std = scipy.stats.norm.fit(times)
+    # Extract the
+    times = [x[1] for x in resultArray]
+    times, bins = convertDataIntoBins(times, 5)
     
-    # Plot the histogram.
-    binwidth = 1
-    bins = np.arange(min(times), max(times) + binwidth, binwidth)
+    # Plot the histogram and add labels
     plt.hist(times, bins=bins, alpha=0.6, color='g')
-
-    # Add labels and show
-    plt.xlabel(f"Time bands ({binwidth} sec)")
+    plt.xlabel(f"Time bands ( sec)")
     plt.ylabel("Number of test subjects")
     plt.title(title)
     plt.show()
 
-def testPerformKS(resultArray, description):
+
+def testPerformSW(input, description):
+    """ Performs Shapiro-Wilk test on the input data """
+    print(f"Performing Shapiro-Wilk Test with {description}")
+
+    # normality test
+    data = [x[1] for x in input]
+    stat, p = shapiro(data)
+    print('Statistics=%.3f, p=%.3f' % (stat, p))
+
+    # interpret
+    alpha = 0.05
+    if p > alpha:
+        print('Sample looks Gaussian (fail to reject H0)')
+    else:
+        print('Sample does not look Gaussian (reject H0)')
+
+
+def testPerformDAgostino(input, description):
+    """ Performs DAgostino test on the input data """
+    print(f"Performing DAgostino Test with {description}")
+    
+    # normality test
+    data = [x[1] for x in input]
+    stat, p = normaltest(data)
+    print('Statistics=%.3f, p=%.3f' % (stat, p))
+
+    # interpret
+    alpha = 0.05
+    if p > alpha:
+        print('Sample looks Gaussian (fail to reject H0)')
+    else:
+        print('Sample does not look Gaussian (reject H0)')
+
+
+def testPerformAD(input, description):
+    """ Perform Anderson-Darling test on the input data """
+    print(f"Performing Anderson-Darling Test with {description}")
+
+    # normality test
+    data = [x[1] for x in input]
+    result = anderson(data)
+    print('Statistic: %.3f' % result.statistic)
+    p = 0
+
+    for i in range(len(result.critical_values)):
+        sl, cv = result.significance_level[i], result.critical_values[i]
+        if result.statistic < result.critical_values[i]:
+            print('%.3f: %.3f, data looks normal (fail to reject H0)' % (sl, cv))
+        else:
+            print('%.3f: %.3f, data does not look normal (reject H0)' % (sl, cv))
+
+
+def testPerformKS(withNavigation, description):
     """ Performs the Kolmogorov-Smirnov Test on data with and without navigation """
     # Extract the times in seconds
     print(f"Plotting {description}")
-    times = [x[1] for x in resultArray if x[0] != 'P1']
+    withNav = [x[1] for x in withNavigation]
 
-    print(f"Kurtosis {kurtosis(times)}")
-    print(f"Skewness {scipy.stats.skew(times)}")
-    output = scipy.stats.kstest(times, 'norm')
-    pass
+    output = scipy.stats.kstest(withNav, 'norm')
+    print(output)
+    
 
 def fillDataVariables():
     """ Parses the Positions data directory and extracts start/finish

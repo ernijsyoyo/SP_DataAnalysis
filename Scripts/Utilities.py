@@ -1,7 +1,27 @@
 import os
+import numpy as np
 
 def checkIfFirstCharIsDigit(string):
     return string[0].isdigit()
+
+def convertDataIntoBins(data, width):
+    """Returns the given data quantized into bins of a given width. Bin range is the value + width
+
+    Args:
+        data ([type]): Array of the data that we want to categorize in bins
+        width ([type]): Width of a bin
+    """
+
+    minimum = min(data)
+    maximum = max(data)
+    bins = np.arange(minimum, maximum + width, width)
+    digitized = np.digitize(data, bins)
+    output = np.array([])
+    for i in digitized:
+        output = np.append(output, bins[i - 1])
+
+    return output, bins
+
 
 def getLinesFromTextFile(pathToTextFile):
     assert(os.path.exists(pathToTextFile), f"Text file at{pathToTextFile} does not exist!")
