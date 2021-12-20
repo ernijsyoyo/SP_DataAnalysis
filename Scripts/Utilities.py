@@ -5,7 +5,11 @@ from dataclasses import dataclass
 import collections
 import xml.etree.ElementTree as ET
 
-
+@dataclass
+class subjectEntry():
+    id : int
+    totalTime : float
+    locations = []
 
 def parseScene(pathToXML):
     tree = ET.parse(pathToXML)

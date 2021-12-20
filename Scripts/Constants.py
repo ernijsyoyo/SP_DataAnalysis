@@ -12,4 +12,5 @@ FOLDER_DATA_POSITIONS = getAbsPath("../Data/Positions")
 FOLDER_DATA_QUESTIONNAIRE = getAbsPath("../Data/Questionnaire")
 FOLDER_DATA_SCENE = getAbsPath("../Data/arScene")
 FOLDER_GRAPHS_POSITIONS = getAbsPath("../Graphs/Positions")
+FOLDER_GRAPHS_HEATMAPS = getAbsPath("../Graphs/Heatmaps")
 

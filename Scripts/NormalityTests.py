@@ -1,3 +1,14 @@
+#!/usr/bin/python3
+"""
+1. Plots the raw data of task completion times for each participant's test
+2. Tests the total task time data for its normality using 
+- KS-Test
+- Shapiro-Wilk
+- Anderson-Darling
+
+Run without any command-line arguments
+"""
+
 from math import sqrt
 from scipy.stats.stats import kurtosis
 from Constants import *
@@ -13,52 +24,30 @@ import matplotlib.pyplot as plt
 import numpy as np
 from numpy.random import poisson
 
-""" Test the data for Gaussian distribution """
 timesElapsedWithAR = []
 timesElapsedWithoutAR = []
 
-hurriedWith = []
-hurriedWithout = []
-hardworkWith = []
-hardworkWithout = []
-insecureWith = []
-insecureWithout = []
-mentaldemandWith = []
-mentaldemandWithout = []
-physicaldemandWith = []
-physicaldemandWithout = []
-successWith = []
-successWithout = []
 
 def main():
+    # Fills the global variables timesElapsedWithAR and timesElapsedWithoutAR
     fillDataVariables()
     print("")
 
-    dataWithAR = [x[1] for x in timesElapsedWithAR if x[0] != 'P1']
+    # From Tuple(ID, Time) extract the time
+    dataWithAR = [x[1] for x in timesElapsedWithAR if x[0] != 'P1'] # remove outlier
     dataWithoutAR = [x[1] for x in timesElapsedWithoutAR]
 
+    # Convert to ndarray
     tmp1 : np.ndarray=np.array(dataWithAR)
     tmp2 : np.ndarray=np.array(dataWithoutAR)
 
-    print(tmp1.mean())
-    print(tmp1.std())
-    print(tmp2.mean())
-    print(tmp2.std())
+    # Calculate mean+std
+    print(f"Mean With AR    {tmp1.mean()}")
+    print(f"Std With AR     {tmp1.std()}")
+    print(f"Mean Without AR {tmp2.mean()}")
+    print(f"Std Without AR  {tmp2.std()}")
     
-
-    # testPerformSW(hurriedWith[0][1], "hurriedWith")
-    # testPerformSW(hurriedWithout[0][1], "hurriedWithout")
-    # testPerformSW(hardworkWith[0][1], "hardworkWith")
-    # testPerformSW(hardworkWithout[0][1], "hardworkWithout")
-    # testPerformSW(insecureWith[0][1], "insecureWith")
-    # testPerformSW(insecureWithout[0][1], "insecureWithout")
-    # testPerformSW(mentaldemandWith[0][1], "mentaldemandWith")
-    # testPerformSW(mentaldemandWithout[0][1], "mentaldemandWithout")
-    # testPerformSW(physicaldemandWith[0][1], "physicaldemandWith")
-    # testPerformSW(physicaldemandWithout[0][1], "physicaldemandWithout")
-    # testPerformSW(successWith[0][1], "successWith")
-    # testPerformSW(successWithout[0][1], "successWithout")
-
+    # Plot the data and run normality tests
     plotTimes(dataWithAR, dataWithoutAR)
     testDataKS(dataWithAR, dataWithoutAR)
     testDataAD(dataWithAR, dataWithoutAR)
@@ -161,6 +150,7 @@ def testPerformKS(input, description):
      
     # Prepare the data
     sorted = np.sort(input, axis=0)
+    
     # Calculate the zScore and obtain the critical value
     zScores = (sorted - sorted.mean()) / (sorted.std())
     criticalValue = ksone.ppf(1 - 0.05 / 2, len(input))
@@ -218,45 +208,45 @@ def fillDataVariables():
         # Append delta time with test subject ID
         timesElapsedWithoutAR.append((subjectID, deltaTime.seconds))
 
-    # Questionnaire
-    files = listdir(FOLDER_DATA_QUESTIONNAIRE)
-    questionnarePaths = [os.path.join(FOLDER_DATA_QUESTIONNAIRE, x) for x in files]
-    for fullFilePath in questionnarePaths:
-        if "HardWorkWith" == os.path.basename(fullFilePath):
-            hardworkWith.append(getLinesFromTextFile(fullFilePath))
+    # # Questionnaire
+    # files = listdir(FOLDER_DATA_QUESTIONNAIRE)
+    # questionnarePaths = [os.path.join(FOLDER_DATA_QUESTIONNAIRE, x) for x in files]
+    # for fullFilePath in questionnarePaths:
+    #     if "HardWorkWith" == os.path.basename(fullFilePath):
+    #         hardworkWith.append(getLinesFromTextFile(fullFilePath))
             
-        elif "HardWorkWithout" == os.path.basename(fullFilePath):
-            hardworkWithout.append(getLinesFromTextFile(fullFilePath))
+    #     elif "HardWorkWithout" == os.path.basename(fullFilePath):
+    #         hardworkWithout.append(getLinesFromTextFile(fullFilePath))
             
-        elif "HurriedWith" == os.path.basename(fullFilePath):
-            hurriedWith.append(getLinesFromTextFile(fullFilePath))
+    #     elif "HurriedWith" == os.path.basename(fullFilePath):
+    #         hurriedWith.append(getLinesFromTextFile(fullFilePath))
             
-        elif "HurriedWithout" == os.path.basename(fullFilePath):
-            hurriedWithout.append(getLinesFromTextFile(fullFilePath))
+    #     elif "HurriedWithout" == os.path.basename(fullFilePath):
+    #         hurriedWithout.append(getLinesFromTextFile(fullFilePath))
             
-        elif "InsecureWith" == os.path.basename(fullFilePath):
-            insecureWith.append(getLinesFromTextFile(fullFilePath))
+    #     elif "InsecureWith" == os.path.basename(fullFilePath):
+    #         insecureWith.append(getLinesFromTextFile(fullFilePath))
 
-        elif "InsecureWithout" == os.path.basename(fullFilePath):
-            insecureWithout.append(getLinesFromTextFile(fullFilePath))
+    #     elif "InsecureWithout" == os.path.basename(fullFilePath):
+    #         insecureWithout.append(getLinesFromTextFile(fullFilePath))
 
-        elif "MentalDemandWith" == os.path.basename(fullFilePath):
-            mentaldemandWith.append(getLinesFromTextFile(fullFilePath))
+    #     elif "MentalDemandWith" == os.path.basename(fullFilePath):
+    #         mentaldemandWith.append(getLinesFromTextFile(fullFilePath))
 
-        elif "MentalDemandWithout" == os.path.basename(fullFilePath):
-            mentaldemandWithout.append(getLinesFromTextFile(fullFilePath))
+    #     elif "MentalDemandWithout" == os.path.basename(fullFilePath):
+    #         mentaldemandWithout.append(getLinesFromTextFile(fullFilePath))
 
-        elif "PhysicalDemandWith" == os.path.basename(fullFilePath):
-            physicaldemandWith.append(getLinesFromTextFile(fullFilePath))
+    #     elif "PhysicalDemandWith" == os.path.basename(fullFilePath):
+    #         physicaldemandWith.append(getLinesFromTextFile(fullFilePath))
 
-        elif "PhysicalDemandWithout" == os.path.basename(fullFilePath):
-            physicaldemandWithout.append(getLinesFromTextFile(fullFilePath))
+    #     elif "PhysicalDemandWithout" == os.path.basename(fullFilePath):
+    #         physicaldemandWithout.append(getLinesFromTextFile(fullFilePath))
 
-        elif "SuccessWith" == os.path.basename(fullFilePath):
-            successWith.append(getLinesFromTextFile(fullFilePath))
+    #     elif "SuccessWith" == os.path.basename(fullFilePath):
+    #         successWith.append(getLinesFromTextFile(fullFilePath))
 
-        elif "SuccessWithout" == os.path.basename(fullFilePath):
-            successWithout.append(getLinesFromTextFile(fullFilePath))
+    #     elif "SuccessWithout" == os.path.basename(fullFilePath):
+    #         successWithout.append(getLinesFromTextFile(fullFilePath))
 
 
 

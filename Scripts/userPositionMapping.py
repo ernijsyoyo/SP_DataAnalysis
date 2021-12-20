@@ -1,80 +1,54 @@
-#from src.project.oscNetwork import OscNetwork
-#import matplotlib.pylab as plt
+#!/usr/bin/python3
+
+""" 
+Generates heatmaps for each test subject's movement trajectory. 
+Each heatmap is displayed and automatically saved in ../Graphs/Heatmaps/ directory
+"""
+
 from __future__ import annotations
-import re
 from matplotlib import patches
 import matplotlib.pyplot as plt
 import numpy as np
 from Utilities import *
 from Constants import *
 from scipy.ndimage.interpolation import shift
+import pathlib
 
 from os import listdir
 
 
-positionsWithAR = []
-positionsWithoutAR = []
-markerLocations = []
-
 def main():
-    markerLocations = getMarkerLocations()
     posWithAr, posWithoutAr = fillVariables()
     npPosWith = np.array(posWithAr)
     npPosWithout = np.array(posWithoutAr) 
-    plotHeatmap(npPosWith, markerLocations, "WithNav")
-    plotHeatmap(npPosWithout, markerLocations, "WithoutNav")
+    plotHeatmap(npPosWith, "WithNav")
+    plotHeatmap(npPosWithout, "WithoutNav")
 
-def plotHeatmap(input, markers, str):
-    for entry in input:
-        for x in entry.items():
-            entriesX = [i[0] for i in x[1]]
-            entriesZ = [i[1] for i in x[1]]
-            entriesX = np.repeat(np.array(entriesX), 1) 
-            entriesZ = np.repeat(np.array(entriesZ), 1) 
+def plotHeatmap(input, str):
+    """[summary]
 
+    Args:
+        input List[ Dictionary{String, List} ]: Contains a test participant ID and its corresponding position entries
+        str ([type]): [description]
+    """
+    # Loop over each dictionary's values
+    for dictEntry in input:
+        for value in dictEntry.items():
+            # Extract X and Z values from the position entry list
+            entriesX = [i[0] for i in value[1]]
+            entriesZ = [i[1] for i in value[1]]
+
+            # Generate a heatmap with Numpy
             heatmap, xedges, yedges = np.histogram2d(entriesZ, entriesX, bins=50)
             extent = [xedges[0], xedges[-1], yedges[0], yedges[-1]]
-
-            fig, ax = plt.subplots()
             
+            # Annotate the image, save it and show it
             plt.text(entriesZ[0], entriesX[0] + 0.2, "Start", color='w')                   
             plt.imshow(heatmap.T, extent=extent, origin='lower', cmap='hot', interpolation='nearest')
-            plt.title(x[0])
-            plt.savefig(f"{x[0]}_{str}.png")
-
-            
-
-
-            # x = [i[1][0] for i in markers]
-            # z = [i[1][2] for i in markers]
-            # ids = [i[0] for i in markers]
-            # fig, ax = plt.subplots()
-            # colors = ['k'] * len(x)
-            # colors[-1] = 'r'
-
-            # # Starting point
-            # x.append(-0.5)
-            # z.append(2)
-            # ids.append("Starting Point")
-            # colors.append('g')
-
-            # rect = patches.Rectangle((0, 5.5), 5.8, -8.8, linewidth=1, edgecolor='c', fill=False)
-            # ax.add_patch(rect)
-            # ax.scatter(z, x, c=colors)
-            # ax.scatter([],[],c='k',label='Destination IDs')
-            # ax.scatter([],[],c='r',label='Global Origin (0, 0, 0)')
-            # ax.scatter([],[],c='g',label='Fixed Starting Location')
-            # ax.scatter([],[],c='c',label='Environment boundaries')
-            # ax.set_ylabel("Length(m) relative to global point of origin")
-            # ax.set_xlabel("Width(m) relative to global point of origin")
-            # ax.set_title("Illustration of the Test Lab")
-            # ax.legend(loc='best')
-
-            # # annotate
-            # for i, txt in enumerate(ids):
-            #     ax.annotate(f"{txt}", (z[i] + 0.1, x[i]+ 0.05))
-
-
+            plt.title(f"{value[0]} {str} ")
+            outputPath = os.path.join(FOLDER_GRAPHS_HEATMAPS, f"{value[0]}_{str}.png")
+            plt.savefig(outputPath)
+            print(f"Saved {outputPath}")
             plt.show()
 
 
@@ -100,20 +74,8 @@ def fillVariables():
         # Get start/finish time
         posWithoutAr.append(getPositionsFromText(fullFilePath))
 
-    markerLocations = parseScene(arScene[0])
-
     return posWithAr, posWithoutAr
 
-
-
-def getMarkerLocations():
-    # Get the file directory
-    positionFiles = listdir(FOLDER_DATA_POSITIONS)
-    arScene = listdir(FOLDER_DATA_SCENE)
-
-    # Extract all file paths WITH and WITHOUT navigation
-    arScene = [os.path.join(FOLDER_DATA_SCENE, x) for x in arScene]
-    return parseScene(arScene[0])
     
 
 if __name__ == '__main__':
