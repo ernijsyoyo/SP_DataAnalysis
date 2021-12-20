@@ -67,8 +67,8 @@ def main():
 
 
 def plotTimes(withAR, withoutAR):
-    plotData(withAR, "Test Completion Times With AR Navigation")    
-    plotData(withoutAR, "Test Completion Times Without AR Navigation")    
+    plotData(withAR, f"n={len(withAR)}")    
+    plotData(withoutAR, f"n={len(withoutAR)}")    
 
 
 def testDataKS(withAR, withoutAR):
@@ -102,7 +102,8 @@ def plotData(resultArray, title):
     ax.set_yticks([0, 1, 2])
     ax.set_xlabel(f"Time(s)")
     ax.set_ylabel("Number of test subjects")
-        
+    ax.title.set_text(title)
+
     # Annotate with precise X axis data
     for i, rect in enumerate(ax.patches):
         height = rect.get_height()

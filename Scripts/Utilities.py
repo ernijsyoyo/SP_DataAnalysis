@@ -1,8 +1,71 @@
 import os
 import numpy as np
+import datetime
+from dataclasses import dataclass
+import collections
+import xml.etree.ElementTree as ET
+
+
+
+def parseScene(pathToXML):
+    tree = ET.parse(pathToXML)
+    root = tree.getroot()
+    output = []
+    for elm in root.findall("./Marker"):
+        # 1. Extract pivot point and pivot orientation
+        # 2. Create a mesh object and initialize it with the pivots, vertices, face
+        # 3. Set the mesh object equal to the mesh member variable
+        #self.mesh = Mesh(pivotPoint, pivotOrientat, self.vrtx, self.fc)
+        atbpos = elm.attrib.get("pos")
+        pos = convertStringToVec3(atbpos, 2)
+        atbID = int(elm.attrib.get("id"))
+
+        output.append((atbID, pos))
+    return output
+    
 
 def checkIfFirstCharIsDigit(string):
     return string[0].isdigit()
+
+def convertStringToVec3(input, roundingDigit):
+    input = input.replace('(', '').replace(')', '').replace('\n','').replace(',', '')
+    output = np.array(input.split(), dtype=np.float32)
+    output = output.round(roundingDigit)
+    return output
+
+
+def getPositionsFromText(pathToTextFile):
+    assert(os.path.exists(pathToTextFile), f"Text file at{pathToTextFile} does not exist!")
+    
+    with open(pathToTextFile) as f:
+        subjectName = None
+        output = collections.defaultdict(list)
+        outputList = np.array([])
+        for line in f.readlines():
+            # Skip all new lines
+            if line == '\n':
+                continue
+            
+            # Set subject name as key
+            elif not checkIfFirstCharIsDigit(line):
+                lineSplit = line.split()
+                subjectName = lineSplit[0] + lineSplit[1]
+            
+            # Prepare an entry to the output dictionary
+            else:
+                entry = line.split(" ", 1)
+                #time = entry[0][:-4] # leave 10th of miliseconds in time
+                position = convertStringToVec3(entry[1], 3)
+                position = np.delete(position, 1)
+                
+                if(not position in outputList):
+                    outputList = np.append(outputList, position)
+
+                    outputEntry = position
+                    output[subjectName].append(outputEntry)
+        
+        return output
+
 
 def convertDataIntoBins(data, width):
     """Returns the given data quantized into bins of a given width. Bin range is the value + width
