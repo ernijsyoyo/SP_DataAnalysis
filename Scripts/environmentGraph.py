@@ -1,5 +1,4 @@
-#from src.project.oscNetwork import OscNetwork
-#import matplotlib.pylab as plt
+#!/usr/bin/python3
 from __future__ import annotations
 import re
 from matplotlib import patches
@@ -10,10 +9,6 @@ from Constants import *
 from scipy.ndimage.interpolation import shift
 
 from os import listdir
-
-
-
-
 
 def main():
     markerLocations = getMarkerLocations()
@@ -33,16 +28,16 @@ def plotScatter(markerLocations):
     ids.append("Starting Point")
     colors.append('g')
 
-    rect = patches.Rectangle((0, 5.5), 5.8, -8.8, linewidth=1, edgecolor='c', fill=False)
+    rect = patches.Rectangle((0, 5.5), 5.8, -6, linewidth=1, edgecolor='c', fill=False)
     ax.add_patch(rect)
     ax.scatter(z, x, c=colors)
     ax.scatter([],[],c='k',label='Destination IDs')
     ax.scatter([],[],c='r',label='Global Origin (0, 0, 0)')
     ax.scatter([],[],c='g',label='Fixed Starting Location')
-    ax.scatter([],[],c='c',label='Environment boundaries')
+    # ax.scatter([],[],c='c',label='Environment boundaries')
     ax.set_ylabel("Length(m) relative to global point of origin")
     ax.set_xlabel("Width(m) relative to global point of origin")
-    ax.set_title("Illustration of the Test Lab")
+    ax.set_title("Illustration of the Optimum Path Without Navigation")
     ax.legend(loc='best')
 
     # annotate
